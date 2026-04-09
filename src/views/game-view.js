@@ -161,17 +161,19 @@ class GameView extends LitElement {
     this._cardStates = this._cardStates.map((state, i) =>
       i === index ? CARD_STATE.WRONG : state
     );
-    this._gameState = 'wrong';
 
-    // Vibración háptica (bonus): 500ms en dispositivos compatibles
+    // Vibración háptica: debe ejecutarse en el mismo tick que el gesto del usuario
     if ('vibrate' in navigator) {
-      navigator.vibrate(500);
+      navigator.vibrate([200, 100, 200]);
     }
+
+    this._gameState = 'wrong';
   }
 
   /** Handler cuando el usuario cambia la dificultad */
   _onDifficultyChanged(e) {
-    if (this._gameState !== 'idle') return; // No se puede cambiar durante el juego
+    // Solo en idle o en game over (wrong) se puede cambiar
+    if (this._gameState !== 'idle' && this._gameState !== 'wrong') return;
     this._difficulty = e.detail.value;
   }
 
