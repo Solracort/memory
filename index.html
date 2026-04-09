@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Viewport mobile-first: escala 1:1 sin zoom del navegador -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Memory Cards</title>
+    <meta name="description" content="Juego de memoria con tarjetas numéricas — PWA" />
+    <meta name="theme-color" content="#004481" />
+
+    <!-- Icono para la barra de dirección y bookmarks -->
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+
+    <!-- iOS: permite añadir a pantalla de inicio -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Memory" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Reset CSS mínimo (sin framework) -->
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f0f4f8;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- El componente raíz de LitElement que gestiona todo el routing -->
+    <memory-app></memory-app>
+
+    <!-- Vite procesa este módulo y genera el bundle optimizado -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

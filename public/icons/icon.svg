@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Fondo con esquinas redondeadas en azul BBVA -->
+  <rect width="192" height="192" rx="32" fill="#004481"/>
+  <!-- Grid 3x3 que representa el tablero del juego -->
+  <g fill="white" opacity="0.9">
+    <rect x="28"  y="28"  width="40" height="40" rx="8"/>
+    <rect x="76"  y="28"  width="40" height="40" rx="8"/>
+    <rect x="124" y="28"  width="40" height="40" rx="8"/>
+    <rect x="28"  y="76"  width="40" height="40" rx="8"/>
+    <rect x="76"  y="76"  width="40" height="40" rx="8"/>
+    <rect x="124" y="76"  width="40" height="40" rx="8"/>
+    <rect x="28"  y="124" width="40" height="40" rx="8"/>
+    <rect x="76"  y="124" width="40" height="40" rx="8"/>
+    <rect x="124" y="124" width="40" height="40" rx="8"/>
+  </g>
+  <!-- Carta central resaltada en verde (acierto) -->
+  <rect x="76" y="76" width="40" height="40" rx="8" fill="#27ae60"/>
+  <!-- Número '5' en la carta central -->
+  <text x="96" y="105" font-size="24" text-anchor="middle"
+        fill="white" font-family="sans-serif" font-weight="bold">5</text>
+</svg>

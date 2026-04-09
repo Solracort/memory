@@ -1,0 +1,14 @@
+# Configuración de despliegue en Netlify
+
+# Directorio donde Vite genera los archivos de producción
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Redirige todas las rutas al index.html para que el router hash funcione
+# Aunque el router hash no necesita esto, es buena práctica tenerlo
+# por si en el futuro se migra a History API.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
