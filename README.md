@@ -4,7 +4,7 @@ Juego de memoria PWA desarrollado con **LitElement** y **Vite** para la prueba t
 
 ## Demo
 
-🔗 [Ver aplicación desplegada](#) ← *(actualizar con URL de Netlify tras el deploy)*
+🔗 [https://juego-memoria-lit.netlify.app/](#) 
 
 ---
 
