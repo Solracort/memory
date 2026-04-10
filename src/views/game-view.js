@@ -10,26 +10,6 @@ import '../components/difficulty-selector.js';
 /**
  * Vista GAME — pantalla principal del juego.
  *
- * Máquina de estados del juego:
- *
- *  ┌─────────┐  click "Comenzar"  ┌──────────┐
- *  │  idle   │ ─────────────────> │ showing  │  (números visibles + countdown)
- *  └─────────┘                    └──────────┘
- *                                      │ tiempo agotado
- *                                      ▼
- *                                 ┌──────────┐
- *                                 │ guessing │  (jugador hace click en carta)
- *                                 └──────────┘
- *                                  │        │
- *                             acierto     fallo
- *                                  │        │
- *                                  ▼        ▼
- *                            ┌────────┐ ┌──────┐
- *                            │correct │ │wrong │ (game over + vibración)
- *                            └────────┘ └──────┘
- *                                  │
- *                    (si aún quedan números por adivinar → guessing)
- *                    (si se adivinaron todos → nueva ronda → showing)
  */
 class GameView extends LitElement {
   static properties = {
