@@ -2,7 +2,8 @@ import { LitElement, html } from 'lit';
 import { gameViewStyles } from './game-view.styles.js';
 import { getUsername, getScore, saveScore } from '../services/user-service.js';
 import { generateBoard, getNumbersToGuess, checkAnswer } from '../services/game-service.js';
-import { CARD_STATE, DIFFICULTY_CONFIG } from '../constants/game-config.js';
+import { vibrateOnWrongAnswer } from '../services/vibration-service.js';
+import { BOARD_SIZE, CARD_STATE, CORRECT_FEEDBACK_DELAY_MS, COUNTDOWN_URGENT_THRESHOLD, DIFFICULTY_CONFIG, NEXT_ROUND_DELAY_MS } from '../constants/game-config.js';
 import '../components/app-button.js';
 import '../components/memory-card.js';
 import '../components/difficulty-selector.js';
@@ -32,7 +33,7 @@ class GameView extends LitElement {
     this._difficulty = 'medio';
     this._gameState = 'idle'; // idle | showing | guessing | correct | wrong
     this._board = [];
-    this._cardStates = Array(9).fill(CARD_STATE.HIDDEN);
+    this._cardStates = Array(BOARD_SIZE).fill(CARD_STATE.HIDDEN);
     this._numbersToGuess = [];
     this._currentGuessIndex = 0;
     this._score = 0;
@@ -66,7 +67,7 @@ class GameView extends LitElement {
     this._board = board;
     this._numbersToGuess = numbersToGuess;
     this._currentGuessIndex = 0;
-    this._cardStates = Array(9).fill(CARD_STATE.HIDDEN);
+    this._cardStates = Array(BOARD_SIZE).fill(CARD_STATE.HIDDEN);
     this._gameState = 'showing';
 
     // Inicia el countdown: muestra los números durante N segundos
@@ -125,13 +126,13 @@ class GameView extends LitElement {
       this._gameState = 'correct'; // Feedback breve
       setTimeout(() => {
         this._gameState = 'guessing';
-      }, 800);
+      }, CORRECT_FEEDBACK_DELAY_MS);
     } else {
       // Ronda completada → hay un pequeño delay y empieza la siguiente
       this._gameState = 'correct';
       setTimeout(() => {
         this._startRound();
-      }, 1000);
+      }, NEXT_ROUND_DELAY_MS);
     }
   }
 
@@ -143,9 +144,7 @@ class GameView extends LitElement {
     );
 
     // Vibración háptica: debe ejecutarse en el mismo tick que el gesto del usuario
-    if ('vibrate' in navigator) {
-      navigator.vibrate([200, 100, 200]);
-    }
+    vibrateOnWrongAnswer();
 
     this._gameState = 'wrong';
   }
@@ -159,7 +158,77 @@ class GameView extends LitElement {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  /** Renderiza la instrucción del turno actual (qué número buscar) */
+  /** Cabecera: nombre del jugador y puntuaciones */
+  _renderHeader() {
+    return html`
+      <header class="game__header">
+        <span class="game__player">👤 ${this._playerName}</span>
+        <div class="game__scores">
+          <span class="game__score">⭐ ${this._score} pts</span>
+          <span class="game__best-score">Récord: ${this._bestScore} pts</span>
+        </div>
+      </header>
+    `;
+  }
+
+  /** Panel de configuración: selector de dificultad, mensaje de game over y botón de inicio */
+  _renderConfigPanel() {
+    const isWrong = this._gameState === 'wrong';
+
+    return html`
+      <div class="game__config">
+        <h2>Nivel de dificultad</h2>
+        <difficulty-selector
+          value=${this._difficulty}
+          @difficulty-changed=${this._onDifficultyChanged}
+        ></difficulty-selector>
+      </div>
+
+      ${isWrong
+        ? html`
+            <div class="game__gameover">
+              <h2>¡Partida terminada!</h2>
+              <p>Puntuación final:</p>
+              <div class="final-score">${this._score} pts</div>
+            </div>
+          `
+        : ''}
+
+      <app-button
+        label=${isWrong ? 'Volver a jugar' : 'Comenzar'}
+        @app-button-click=${this._startGame}
+      ></app-button>
+    `;
+  }
+
+  /** Fase "showing": countdown y tablero con los números visibles */
+  _renderShowingPhase() {
+    return html`
+      <div
+        class="game__countdown ${this._countdown <= COUNTDOWN_URGENT_THRESHOLD
+          ? 'game__countdown--urgent'
+          : ''}"
+        aria-live="polite"
+        aria-label="Tiempo restante: ${this._countdown} segundos"
+      >
+        ⏱ ${this._countdown}s
+      </div>
+      <p style="text-align:center; color:#555; margin:0 0 8px">
+        ¡Memoriza los números!
+      </p>
+      ${this._renderBoard()}
+    `;
+  }
+
+  /** Fase "guessing / correct": instrucción de qué número buscar y tablero */
+  _renderGuessingPhase() {
+    return html`
+      ${this._renderInstruction()}
+      ${this._renderBoard()}
+    `;
+  }
+
+  /** Instrucción del turno actual (qué número buscar) */
   _renderInstruction() {
     const currentTarget = this._numbersToGuess[this._currentGuessIndex];
 
@@ -212,78 +281,21 @@ class GameView extends LitElement {
   }
 
   render() {
-    const { _gameState: state, _difficulty: difficulty, _score: score } = this;
+    const { _gameState: state } = this;
     const isIdle = state === 'idle';
     const isWrong = state === 'wrong';
 
     return html`
       <section class="game">
-        <!-- ── Cabecera con jugador y puntos ── -->
-        <header class="game__header">
-          <span class="game__player">👤 ${this._playerName}</span>
-          <div class="game__scores">
-            <span class="game__score">⭐ ${score} pts</span>
-            <span class="game__best-score">Récord: ${this._bestScore} pts</span>
-          </div>
-        </header>
+        ${this._renderHeader()}
 
-        <!-- ── Panel: Selector de dificultad + botón Comenzar ── -->
-        ${isIdle || isWrong
-          ? html`
-              <div class="game__config">
-                <h2>Nivel de dificultad</h2>
-                <difficulty-selector
-                  value=${difficulty}
-                  @difficulty-changed=${this._onDifficultyChanged}
-                ></difficulty-selector>
-              </div>
+        ${isIdle || isWrong ? this._renderConfigPanel() : ''}
 
-              ${isWrong
-                ? html`
-                    <div class="game__gameover">
-                      <h2>¡Partida terminada!</h2>
-                      <p>Puntuación final:</p>
-                      <div class="final-score">${score} pts</div>
-                    </div>
-                  `
-                : ''}
+        ${state === 'showing' ? this._renderShowingPhase() : ''}
 
-              <app-button
-                label=${isWrong ? 'Volver a jugar' : 'Comenzar'}
-                @app-button-click=${this._startGame}
-              ></app-button>
-            `
-          : ''}
+        ${state === 'guessing' || state === 'correct' ? this._renderGuessingPhase() : ''}
 
-        <!-- ── Tablero + countdown (durante la fase de mostrar números) ── -->
-        ${state === 'showing'
-          ? html`
-              <div
-                class="game__countdown ${this._countdown <= 3
-                  ? 'game__countdown--urgent'
-                  : ''}"
-                aria-live="polite"
-                aria-label="Tiempo restante: ${this._countdown} segundos"
-              >
-                ⏱ ${this._countdown}s
-              </div>
-              <p style="text-align:center; color:#555; margin:0 0 8px">
-                ¡Memoriza los números!
-              </p>
-              ${this._renderBoard()}
-            `
-          : ''}
-
-        <!-- ── Tablero + instrucción (durante la fase de adivinar) ── -->
-        ${state === 'guessing' || state === 'correct'
-          ? html`
-              ${this._renderInstruction()}
-              ${this._renderBoard()}
-            `
-          : ''}
-
-        <!-- ── Tablero con resultado (fallo, antes del game over) ── -->
-        ${state === 'wrong' ? html` ${this._renderBoard()} ` : ''}
+        ${state === 'wrong' ? this._renderBoard() : ''}
       </section>
     `;
   }
